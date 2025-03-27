@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu, Search, X, Film } from "lucide-react";
-import { useLocation, useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
 interface HeaderProps {
@@ -23,7 +23,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   });
 
   // Filter results based on search term
-  const filteredMovies = movies 
+  const filteredMovies = Array.isArray(movies) 
     ? movies.filter((movie: any) => 
         movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (movie.director && movie.director.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -31,7 +31,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       ).slice(0, 3)
     : [];
     
-  const filteredUsers = users
+  const filteredUsers = Array.isArray(users)
     ? users.filter((user: any) =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())

@@ -11,11 +11,14 @@ import {
   ArrowRight 
 } from "lucide-react";
 import RentalModal from "@/components/ui/rental-modal";
-import { useQuery } from "@tanstack/react-query";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { format, isAfter, isToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 interface Stat {
   label: string;
@@ -26,7 +29,10 @@ interface Stat {
 }
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
+  const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
+  const [selectedRental, setSelectedRental] = useState<any>(null);
 
   // Fetch stats
   const { data: stats, isLoading: isLoadingStats } = useQuery({
@@ -47,25 +53,64 @@ export default function Dashboard() {
   const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['/api/users'],
   });
+  
+  // Return rental mutation
+  const returnRentalMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('PATCH', `/api/rentals/${id}/return`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rentals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/movies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      toast({
+        title: "Success",
+        description: "Rental returned successfully",
+      });
+      setIsReturnDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to return rental",
+        variant: "destructive",
+      });
+      setIsReturnDialogOpen(false);
+    },
+  });
+  
+  // Handle return rental
+  const handleReturnRental = (rental: any) => {
+    setSelectedRental(rental);
+    setIsReturnDialogOpen(true);
+  };
+  
+  // Confirm return rental
+  const confirmReturnRental = () => {
+    if (selectedRental) {
+      returnRentalMutation.mutate(selectedRental.id);
+    }
+  };
 
   const statsData: Stat[] = [
     {
       label: "Active Rentals",
-      value: stats?.activeRentals || 0,
+      value: stats && typeof stats === 'object' && 'activeRentals' in stats ? stats.activeRentals : 0,
       icon: <ClipboardList className="h-6 w-6" />,
       iconBg: "bg-primary/10",
       iconColor: "text-primary"
     },
     {
       label: "Available Movies",
-      value: stats?.availableMovies || 0,
+      value: stats && typeof stats === 'object' && 'availableMovies' in stats ? stats.availableMovies : 0,
       icon: <Film className="h-6 w-6" />,
       iconBg: "bg-secondary/10",
       iconColor: "text-secondary"
     },
     {
       label: "Registered Users",
-      value: stats?.registeredUsers || 0,
+      value: stats && typeof stats === 'object' && 'registeredUsers' in stats ? stats.registeredUsers : 0,
       icon: <Users className="h-6 w-6" />,
       iconBg: "bg-green-500/10",
       iconColor: "text-green-500"
@@ -73,7 +118,7 @@ export default function Dashboard() {
   ];
 
   // Get the 3 most recent active rentals
-  const recentRentals = rentals
+  const recentRentals = Array.isArray(rentals)
     ? rentals
         .filter((rental: any) => !rental.returnedDate)
         .sort((a: any, b: any) => 
@@ -83,7 +128,7 @@ export default function Dashboard() {
     : [];
 
   // Get available movies (up to 4)
-  const availableMovies = movies
+  const availableMovies = Array.isArray(movies)
     ? movies
         .filter((movie: any) => movie.available)
         .slice(0, 4)
@@ -179,7 +224,13 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Return">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8" 
+                            title="Return"
+                            onClick={() => handleReturnRental(rental)}
+                          >
                             <CornerDownLeft className="h-4 w-4 text-neutral-500 hover:text-primary" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" title="Details">
@@ -283,7 +334,7 @@ export default function Dashboard() {
                 <UserCardSkeleton />
                 <UserCardSkeleton />
               </>
-            ) : users && users.length > 0 ? (
+            ) : Array.isArray(users) && users.length > 0 ? (
               users.slice(0, 4).map((user: any) => {
                 const initials = user.name
                   .split(' ')
@@ -352,6 +403,18 @@ export default function Dashboard() {
         isOpen={isRentalModalOpen} 
         onClose={() => setIsRentalModalOpen(false)}
         onSubmit={() => setIsRentalModalOpen(false)}
+      />
+      
+      {/* Return Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isReturnDialogOpen}
+        onClose={() => setIsReturnDialogOpen(false)}
+        onConfirm={confirmReturnRental}
+        title="Return Movie"
+        description={`Are you sure you want to mark "${selectedRental?.movie?.title}" as returned by ${selectedRental?.user?.name}?`}
+        confirmText="Return Movie"
+        cancelText="Cancel"
+        isPending={returnRentalMutation.isPending}
       />
     </div>
   );
