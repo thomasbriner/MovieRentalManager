@@ -1,82 +1,139 @@
 <script lang="ts">
   import { location } from 'svelte-spa-router';
-  
-  export let open: boolean = false;
+  export let open = false;
   export let closeSidebar: () => void;
-  
-  const links = [
-    { href: '/', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/movies', label: 'Movies', icon: 'movie' },
-    { href: '/users', label: 'Users', icon: 'users' },
-    { href: '/rentals', label: 'Rentals', icon: 'book' }
-  ];
+
+  const isActive = (path: string) => $location === path;
 </script>
 
-<aside class={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out`}>
-  <div class="h-full flex flex-col">
-    <div class="flex items-center justify-between h-16 px-4 border-b">
-      <span class="text-xl font-bold text-gray-900">Movie Rental</span>
+<div class="fixed z-50 inset-0 {open ? 'block' : 'hidden'} lg:hidden">
+  <div class="fixed inset-0 bg-black/50" on:click={closeSidebar}></div>
+  <aside class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg dark:bg-gray-900 overflow-y-auto">
+    <div class="flex items-center justify-between px-4 py-4 border-b">
+      <h1 class="text-xl font-bold text-primary">Movie Rental</h1>
       <button 
         on:click={closeSidebar}
-        class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden"
+        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        <span class="sr-only">Close sidebar</span>
-        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
-    
-    <nav class="flex-1 overflow-y-auto py-4">
-      <ul class="space-y-1 px-2">
-        {#each links as link}
-          <li>
-            <a 
-              href={link.href} 
-              class={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${$location === link.href ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-              on:click|preventDefault={() => {
-                window.location.hash = link.href;
-                if (open) closeSidebar();
-              }}
-            >
-              <span class="mr-3">
-                {#if link.icon === 'dashboard'}
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                {:else if link.icon === 'movie'}
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                  </svg>
-                {:else if link.icon === 'users'}
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                {:else if link.icon === 'book'}
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                {/if}
-              </span>
-              {link.label}
-            </a>
-          </li>
-        {/each}
+    <nav class="p-4">
+      <ul class="space-y-2">
+        <li>
+          <a 
+            href="/#/" 
+            class="flex items-center p-2 rounded-lg {isActive('/') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a 
+            href="/#/movies" 
+            class="flex items-center p-2 rounded-lg {isActive('/movies') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+            Movies
+          </a>
+        </li>
+        <li>
+          <a 
+            href="/#/users" 
+            class="flex items-center p-2 rounded-lg {isActive('/users') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Users
+          </a>
+        </li>
+        <li>
+          <a 
+            href="/#/rentals" 
+            class="flex items-center p-2 rounded-lg {isActive('/rentals') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            Rentals
+          </a>
+        </li>
       </ul>
     </nav>
-    
-    <div class="border-t p-4">
-      <div class="text-xs text-gray-500">
-        <p>© 2025 Movie Rental System</p>
-        <p>All rights reserved</p>
-      </div>
-    </div>
-  </div>
-</aside>
+  </aside>
+</div>
 
-{#if open}
-  <div 
-    class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
-    on:click={closeSidebar}
-  ></div>
-{/if}
+<aside class="hidden lg:flex flex-col w-64 border-r shrink-0">
+  <div class="flex items-center h-16 px-4 border-b">
+    <h1 class="text-xl font-bold text-primary">Movie Rental</h1>
+  </div>
+  <nav class="p-4 flex-1">
+    <ul class="space-y-2">
+      <li>
+        <a 
+          href="/#/" 
+          class="flex items-center p-2 rounded-lg {isActive('/') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+          </svg>
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a 
+          href="/#/movies" 
+          class="flex items-center p-2 rounded-lg {isActive('/movies') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+          Movies
+        </a>
+      </li>
+      <li>
+        <a 
+          href="/#/users" 
+          class="flex items-center p-2 rounded-lg {isActive('/users') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Users
+        </a>
+      </li>
+      <li>
+        <a 
+          href="/#/rentals" 
+          class="flex items-center p-2 rounded-lg {isActive('/rentals') ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          Rentals
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
